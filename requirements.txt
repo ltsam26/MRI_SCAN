@@ -10,3 +10,4 @@ tqdm
 flask
 gradio
 pydicom
+fpdf
