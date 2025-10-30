@@ -2,10 +2,11 @@ torch>=2.0.0
 torchvision>=0.15.0
 numpy
 pandas
-opencv-python
+opencv-python-headless
 Pillow
 scikit-learn
 matplotlib
 tqdm
 flask
 gradio
+pydicom
