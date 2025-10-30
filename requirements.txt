@@ -1,0 +1,11 @@
+torch>=2.0.0
+torchvision>=0.15.0
+numpy
+pandas
+opencv-python
+Pillow
+scikit-learn
+matplotlib
+tqdm
+flask
+gradio
