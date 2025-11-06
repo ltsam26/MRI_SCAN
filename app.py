@@ -12,15 +12,8 @@ import tempfile
 import matplotlib.pyplot as plt
 import pandas as pd
 
-# -----------------------------
-# Device Configuration
-# -----------------------------
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-
-# -----------------------------
-# Load Model
-# -----------------------------
 @st.cache_resource
 def load_model():
     model = models.resnet18(pretrained=False)
@@ -29,19 +22,12 @@ def load_model():
     model = model.to(device)
     model.eval()
     return model
-
-
 model = load_model()
-
-# -----------------------------
-# Preprocessing Functions
-# -----------------------------
 transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
     transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
 ])
-
 
 def preprocess_image(img):
     if len(np.array(img).shape) == 2:
@@ -55,10 +41,6 @@ def preprocess_image(img):
         img_array = img_array[y:y + h, x:x + w]
     return Image.fromarray(img_array)
 
-
-# -----------------------------
-# Grad-CAM Implementation
-# -----------------------------
 def generate_gradcam(model, image_tensor, target_class):
     gradients, activations = [], []
 
@@ -82,10 +64,6 @@ def generate_gradcam(model, image_tensor, target_class):
     grad_cam = (grad_cam - grad_cam.min()) / (grad_cam.max() - grad_cam.min() + 1e-8)
     return grad_cam
 
-
-# -----------------------------
-# Page Configuration & Custom CSS
-# -----------------------------
 st.set_page_config(page_title="Brain MRI Tumor Detector", page_icon="🧠", layout="wide")
 
 st.markdown("""
@@ -158,23 +136,15 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# -----------------------------
-# Header
-# -----------------------------
 st.markdown('<h1 class="main-header">🧠 Brain MRI Tumor Detection System</h1>', unsafe_allow_html=True)
 st.markdown('<p class="sub-text">AI-powered MRI classification with Grad-CAM visual explanations</p>', unsafe_allow_html=True)
 
-# -----------------------------
-# Session State Initialization
-# -----------------------------
 if "patient_submitted" not in st.session_state:
     st.session_state.patient_submitted = False
 if "patient_metadata" not in st.session_state:
     st.session_state.patient_metadata = {}
 
-# -----------------------------
-# Sidebar: Patient Info & File Upload
-# -----------------------------
+
 with st.sidebar:
     st.header("🏥 Patient Information")
     with st.form("patient_form"):
@@ -205,10 +175,6 @@ with st.sidebar:
             accept_multiple_files=True
         )
 
-
-# -----------------------------
-# Main Analysis
-# -----------------------------
 if st.session_state.patient_submitted and uploaded_files:
     st.markdown("<div class='sub-text'>Processing uploaded MRI images...</div>", unsafe_allow_html=True)
     progress_bar = st.progress(0)
@@ -246,15 +212,12 @@ if st.session_state.patient_submitted and uploaded_files:
         combined = np.uint8(heatmap * 0.4 + grad_cam_img * 0.6)
         slice_images.append((img, combined, pred_label, probs))
 
-    # Tabs
     tab1, tab2, tab3, tab4 = st.tabs(["📋 Patient Info", "🧩 MRI & Grad-CAM", "📊 Probability", "📄 Report PDF"])
 
-    # Tab 1
     with tab1:
         for key, value in st.session_state.patient_metadata.items():
             st.markdown(f"<div class='patient-card'><b>{key}:</b> {value}</div>", unsafe_allow_html=True)
 
-    # Tab 2
     with tab2:
         for i, (orig, gradcam_img, pred, probs) in enumerate(slice_images):
             st.markdown(f"<div class='info-card'><b>Slice {i + 1}:</b> Prediction - {pred}</div>", unsafe_allow_html=True)
@@ -264,7 +227,6 @@ if st.session_state.patient_submitted and uploaded_files:
             with col2:
                 st.image(gradcam_img, caption="Grad-CAM Visualization", use_container_width=True)
 
-    # Tab 3 - Probability with Table + Bar Chart
     with tab3:
         df = pd.DataFrame([
             {"File": f, "Prediction": p, "No Tumor %": pr[0]*100, "Tumor %": pr[1]*100}
@@ -272,7 +234,7 @@ if st.session_state.patient_submitted and uploaded_files:
         ])
         st.dataframe(df, use_container_width=True)
 
-        # Bar Chart
+
         fig, ax = plt.subplots(figsize=(8, len(df) * 0.5))
         for idx, row in df.iterrows():
             color = "#2ecc71" if row["Prediction"] == "No Tumor" else "#e63946"
@@ -281,7 +243,6 @@ if st.session_state.patient_submitted and uploaded_files:
         ax.set_ylabel("MRI File")
         st.pyplot(fig)
 
-    # Tab 4 - Report PDF
     with tab4:
         pdf = FPDF()
         pdf.add_page()
@@ -310,9 +271,6 @@ if st.session_state.patient_submitted and uploaded_files:
         with open(pdf_output, "rb") as f:
             st.download_button("⬇️ Download PDF Report", f, "mri_report.pdf", mime="application/pdf")
 
-# -----------------------------
-# Footer
-# -----------------------------
 st.markdown("""
 <hr style='border-top:1px solid #ccc'>
 <p style='text-align:center;color:#555;font-size:14px'>
